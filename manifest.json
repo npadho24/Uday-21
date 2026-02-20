@@ -1,0 +1,15 @@
+{
+  "name": "Uday 21 - Habit Renewal",
+  "short_name": "Uday21",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a5f7a",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1533/1533913.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
