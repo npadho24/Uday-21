@@ -3,29 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Uday 21 - Task Tracker</title>
+    <title>Uday 21 - Habit Renewal</title>
     <style>
         :root { --primary: #1a5f7a; --success: #2ecc71; --missed: #e74c3c; --locked: #dfe6e9; --bg: #f4f7f6; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; justify-content: center; }
         .app-card { background: white; width: 100%; max-width: 450px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
         .header { background: var(--primary); color: white; padding: 20px; text-align: center; }
-        
         .task-section { padding: 15px; background: #fff; }
         .task-group { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 12px; border-radius: 10px; background: #fdfdfd; border: 1px solid #eee; }
         .task-name { font-weight: bold; color: #34495e; font-size: 14px; flex: 1; }
-        
         .checks { display: flex; gap: 10px; }
         .check-dot { width: 35px; height: 35px; border-radius: 8px; border: 2px solid #ddd; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; transition: 0.2s; background: white; }
-        
-        /* सिलेक्ट होने पर रंग */
         .check-dot.active { background: var(--success) !important; color: white; border-color: var(--success); }
-
         .grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; padding: 20px; border-top: 1px solid #eee; }
         .day-box { height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; background: var(--locked); color: #7f8c8d; font-size: 13px; }
-        .day-box.completed { background: var(--success); color: white; }
-        .day-box.missed { background: var(--missed); color: white; }
+        .day-box.completed { background: var(--success) !important; color: white !important; }
+        .day-box.missed { background: var(--missed) !important; color: white !important; }
         .day-box.today { border: 2px solid var(--primary); color: var(--primary); background: white; }
-
         .footer-btns { padding: 15px; text-align: center; }
         button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; background: #bdc3c7; color: white; }
     </style>
@@ -37,14 +31,11 @@
         <h1>UDAY 21</h1>
         <p>Day <span id="dayNum">1</span>: कंसिस्टेंसी चैलेंज</p>
     </div>
-
     <div class="task-section">
         <h4 style="margin-top:0; color: var(--primary);">आज के कार्य (3 बार)</h4>
         <div id="tasksContainer"></div>
     </div>
-
     <div class="grid" id="calendarGrid"></div>
-
     <div class="footer-btns">
         <button onclick="resetApp()">Reset Journey</button>
     </div>
@@ -52,9 +43,7 @@
 
 <script>
     const taskNames = ["Affirmation", "Visualization", "Grateful", "Ho'oponopono"];
-    
-    // डेटा लोड करना
-    let data = JSON.parse(localStorage.getItem('uday21_v4')) || {
+    let data = JSON.parse(localStorage.getItem('uday21_v5')) || {
         startDate: new Date().toDateString(),
         history: {}, 
         todayTasks: { "Affirmation": [], "Visualization": [], "Grateful": [], "Ho'oponopono": [] }
@@ -62,54 +51,48 @@
 
     function render() {
         const todayStr = new Date().toDateString();
+        const diff = Math.floor((new Date() - new Date(data.startDate)) / 86400000) + 1;
         
-        // नया दिन शुरू होने पर पुराने टास्क चेक करना
+        // चेक करें कि क्या नया दिन शुरू हुआ है
         if (data.lastDate && data.lastDate !== todayStr) {
             const lastDiff = Math.floor((new Date(data.lastDate) - new Date(data.startDate)) / 86400000) + 1;
             const completedCount = Object.values(data.todayTasks).flat().length;
-            
-            if (completedCount < 12) data.history[lastDiff] = 'missed';
-            else data.history[lastDiff] = 'completed';
-            
-            // आज के लिए टास्क रिसेट करें
+            data.history[lastDiff] = (completedCount >= 12) ? 'completed' : 'missed';
             data.todayTasks = { "Affirmation": [], "Visualization": [], "Grateful": [], "Ho'oponopono": [] };
         }
         data.lastDate = todayStr;
-
-        const diff = Math.floor((new Date() - new Date(data.startDate)) / 86400000) + 1;
         document.getElementById('dayNum').innerText = diff;
 
-        // टास्क रेंडर करना
+        // टास्क रेंडर
         const container = document.getElementById('tasksContainer');
         container.innerHTML = '';
+        let totalSelected = 0;
         taskNames.forEach(name => {
             const div = document.createElement('div');
             div.className = 'task-group';
             let buttons = '';
             for(let i=1; i<=3; i++) {
-                const isActive = data.todayTasks[name].includes(i) ? 'active' : '';
-                buttons += `<div class="check-dot ${isActive}" onclick="toggleTask('${name}', ${i})">${i}</div>`;
+                const isActive = data.todayTasks[name].includes(i);
+                if(isActive) totalSelected++;
+                buttons += `<div class="check-dot ${isActive ? 'active' : ''}" onclick="toggleTask('${name}', ${i})">${i}</div>`;
             }
             div.innerHTML = `<div class="task-name">${name}</div><div class="checks">${buttons}</div>`;
             container.appendChild(div);
         });
 
-        // कैलेंडर रेंडर करना
+        // कैलेंडर रेंडर
         const grid = document.getElementById('calendarGrid');
         grid.innerHTML = '';
         for (let i = 1; i <= 21; i++) {
             const box = document.createElement('div');
             box.className = 'day-box';
             box.innerText = i;
+            
             if (data.history[i] === 'completed') box.classList.add('completed');
             else if (data.history[i] === 'missed') box.classList.add('missed');
             else if (i === diff) {
                 box.classList.add('today');
-                // अगर आज के 12 पूरे हो गए तो ग्रीन कर दो
-                if (Object.values(data.todayTasks).flat().length === 12) {
-                    box.classList.add('completed');
-                    data.history[i] = 'completed';
-                }
+                if (totalSelected >= 12) box.classList.add('completed');
             }
             grid.appendChild(box);
         }
@@ -118,22 +101,13 @@
 
     function toggleTask(name, val) {
         let list = data.todayTasks[name];
-        if (list.includes(val)) {
-            data.todayTasks[name] = list.filter(v => v !== val);
-        } else {
-            list.push(val);
-        }
+        if (list.includes(val)) data.todayTasks[name] = list.filter(v => v !== val);
+        else list.push(val);
         render();
     }
 
-    function save() { localStorage.setItem('uday21_v4', JSON.stringify(data)); }
-
-    function resetApp() {
-        if (confirm("क्या आप पूरी प्रोग्रेस मिटाना चाहते हैं?")) {
-            localStorage.removeItem('uday21_v4');
-            location.reload();
-        }
-    }
+    function save() { localStorage.setItem('uday21_v5', JSON.stringify(data)); }
+    function resetApp() { if (confirm("रिसेट करें?")) { localStorage.removeItem('uday21_v5'); location.reload(); } }
 
     render();
 </script>
